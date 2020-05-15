@@ -1,0 +1,51 @@
+{% extends "layout.html" %}
+{% block content %}
+<br>
+<div class="row">
+    <div class="col-md-10">
+        <h1>{{ year }}年{{ month }}月{{ day }}日の予定</h1>
+    </div>
+    <div class="col-md-2">
+        <a href="/admin" class="btn btn-primary">もどる</a>
+    </div>
+</div>
+<hr>
+<p>{{ username }}さん、予定を確認・登録・終了してください。</p>
+
+    <br>
+<h3>予定一覧</h3>
+<p>予定を終了した場合はチェックボックスにチェックをしてください。</p>
+<form action="/done" method="post">
+    <table class="table">
+        <thead class="table-dark">
+        <tr>
+            <th>内容</th>
+            <th>締め切り</th>
+            <th>終了</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for t in task %}
+        <tr>
+            <td>{{ t.content }}</td>
+            <td>{{ t.deadline }}</td>
+            <td>
+                {% if t.done %}
+                <span class="text-success">終了済</span>
+                {% else %}
+                <input type="checkbox" name="done[]" value="{{ t.id }}"> &nbsp; <span class="text-danger">終了する</span>
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    <br>
+    {% if task | length != 0 %}
+    <button type="submit" class="btn btn-primary">更新する</button>
+    {% else %}
+    <button type="submit" class="btn btn-primary" disabled="disabled">更新する</button>
+    {% endif %}
+</form>
+
+{% endblock %}
