@@ -12,14 +12,14 @@ if __name__ == "__main__":
         Base.metadata.create_all(db.engine)
 
     # サンプルユーザ(admin)を作成
-    admin = User(username='admin', password='fastapi', mail='hoge@example.com')
+    admin = User(username="admin", password="fastapi", mail="hoge@example.com")
     db.session.add(admin)  # 追加
     db.session.commit()  # データベースにコミット
 
     # サンプルタスク
     task = Task(
         user_id=admin.id,
-        content='〇〇の締め切り',
+        content="〇〇の締め切り",
         deadline=datetime(2019, 12, 25, 12, 00, 00),
     )
     print(task)
