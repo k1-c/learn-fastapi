@@ -1,5 +1,5 @@
-from fastapi import FastAPI, Depends, HTTPException  # new
-from fastapi.security import HTTPBasic, HTTPBasicCredentials  # new
+from fastapi import FastAPI, Depends, HTTPException, Form
+from fastapi.security import HTTPBasic, HTTPBasicCredentials
 
 from starlette.templating import Jinja2Templates
 from starlette.requests import Request
@@ -233,3 +233,59 @@ def delete(request: Request, t_id, credentials: HTTPBasicCredentials = Depends(s
     db.session.close()
 
     return RedirectResponse('/admin')
+
+
+def get(request: Request, credentials: HTTPBasicCredentials = Depends(security)):
+    # 認証
+    username = auth(credentials)
+
+    # ユーザ情報を取得
+    user = db.session.query(User).filter(User.username == username).first()
+
+    # タスクを取得
+    task = db.session.query(Task).filter(Task.user_id == user.id).all()
+
+    db.session.close()
+
+    # JSONフォーマット
+    task = [{
+        'id': t.id,
+        'content': t.content,
+        'deadline': t.deadline.strftime('%Y-%m-%d %H:%M:%S'),
+        'published': t.date.strftime('%Y-%m-%d %H:%M:%S'),
+        'done': t.done,
+    } for t in task]
+
+    return task
+
+
+async def insert(request: Request,
+                 content: str = Form(...), deadline: str = Form(...),
+                 credentials: HTTPBasicCredentials = Depends(security)):
+    """
+    タスクを追加してJSONで新規タスクを返す。「deadline」は%Y-%m-%d_%H:%M:%S (e.g. 2019-11-03_12:30:00)の形式
+    """
+    # 認証
+    username = auth(credentials)
+
+    # ユーザ情報を取得
+    user = db.session.query(User).filter(User.username == username).first()
+
+    # タスクを追加
+    task = Task(user.id, content, datetime.strptime(deadline, '%Y-%m-%d_%H:%M:%S'))
+
+    db.session.add(task)
+    db.session.commit()
+
+    # テーブルから新しく追加したタスクを取得する
+    task = db.session.query(Task).all()[-1]
+    db.session.close()
+
+    # 新規タスクをJSONで返す
+    return {
+        'id': task.id,
+        'content': task.content,
+        'deadline': task.deadline.strftime('%Y-%m-%d %H:%M:%S'),
+        'published': task.date.strftime('%Y-%m-%d %H:%M:%S'),
+        'done': task.done,
+    }
